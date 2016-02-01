@@ -1,0 +1,19 @@
+Package: bootrlm
+Type: Package
+Title: Bootstrapped Robust Linear Regression Models
+Version: 0.1
+Date: 2016-01-31
+Author: David Kretch
+Maintainer: David Kretch <david.kretch@gmail.com>
+Description: Fast bootstrapped robust linear model estimation in C++.
+License: GPL-2
+LazyData: TRUE
+Imports:
+    Rcpp (>= 0.12.2)
+LinkingTo: 
+    Rcpp, 
+    RcppArmadillo
+Suggests:
+    MASS,
+    testthat
+RoxygenNote: 5.0.1
