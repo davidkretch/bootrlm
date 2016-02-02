@@ -22,7 +22,6 @@
 #' \item{data}{The data frame supplied.}
 #' \item{method}{The estimation method requested.}
 #' @examples
-#' library(MASS)
 #' data(stackloss)
 #' bootrlm_fit <- bootrlm(stack.loss ~ ., stackloss, r = 1000, method = "MM")
 #' @export
