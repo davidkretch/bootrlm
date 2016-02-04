@@ -1,9 +1,7 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-
 namespace util {
-
 
 // number of combinations of size k from n elements
 unsigned long long choose(unsigned long long, unsigned long long);
@@ -17,7 +15,6 @@ private:
   double c;
 };
 
-
 // biweight integral function
 struct chi {
   chi(double);
@@ -27,8 +24,6 @@ private:
   double c;
 };
 
-
-}
-
+} // namespace util
 
 #endif

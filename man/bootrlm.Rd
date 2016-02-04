@@ -39,7 +39,6 @@ corresponding to the matrix \code{replicates}.}
 Fit bootstrapped robust linear models
 }
 \examples{
-library(MASS)
 data(stackloss)
 bootrlm_fit <- bootrlm(stack.loss ~ ., stackloss, r = 1000, method = "MM")
 }

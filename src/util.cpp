@@ -2,9 +2,7 @@
 #include <cmath>
 #include "util.h"
 
-
 namespace util {
-
 
 // number of combinations of size k from n elements
 unsigned long long choose(unsigned long long n, unsigned long long k) {
@@ -19,20 +17,16 @@ unsigned long long choose(unsigned long long n, unsigned long long k) {
   return r;
 }
 
-
 // initialize c for Tukey's biweight function
 psi::psi(double c) : c(c) {};
-
 
 // Tukey's biweight function
 double psi::operator()(double x) {
   return pow(1 - pow(std::min(1.0, fabs(x / c)), 2), 2);
 };
 
-
 // initialize c for biweight integral function
 chi::chi(double c) : c(c) {};
-
 
 // biweight integral function
 double chi::operator()(double x) {
@@ -42,5 +36,4 @@ double chi::operator()(double x) {
   else return x * (3 + x * (-3 + x));
 };
 
-
-}
+} // namespace util
