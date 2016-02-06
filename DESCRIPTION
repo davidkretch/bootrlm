@@ -1,6 +1,6 @@
 Package: bootrlm
 Type: Package
-Title: Bootstrapped Robust Linear Regression Models
+Title: Bootstrapped Robust Linear Models
 Version: 0.1
 Date: 2016-01-31
 Author: David Kretch

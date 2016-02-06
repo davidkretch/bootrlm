@@ -30,7 +30,7 @@ corresponding to the matrix \code{replicates}.}
 \item{residuals}{A matrix whose columns are the residuals
 corresponding to the matrix \code{replicates}.}
 \item{scale}{A vector with the estimated scale for each replicate.}
-\item{seed}{The seed used.}
+\item{rng_state}{The random number generator state.}
 \item{formula}{The formula supplied.}
 \item{data}{The data frame supplied.}
 \item{method}{The estimation method requested.}
