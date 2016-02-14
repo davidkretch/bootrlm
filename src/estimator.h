@@ -2,6 +2,7 @@
 #define ESTIMATOR_H
 #include <RcppArmadillo.h>
 #include "data.h"
+#include "extern.h"
 
 namespace bootrlm {
 
@@ -12,12 +13,16 @@ public:
   virtual void operator()(const Data&, double*, double*, double*, double*);
 };
 
-class MMEstimator : public Estimator {
+class LQSEstimator : public Estimator {
 public:
-  MMEstimator(const Data&, double);
+  LQSEstimator();
+  LQSEstimator(const Data&, double, double);
   void operator()(const Data&, double*, double*, double*, double*);
 
 private:
+  double lmsadj(double*, int, int, double*);
+  double ltsadj(double*, int, int, double*);
+  double chi(double, double);
   int n;
   int p;
   double k0;
@@ -31,6 +36,20 @@ private:
   int sing;
   double pk0;
   double beta;
+};
+
+class MMEstimator : public Estimator {
+public:
+  MMEstimator();
+  MMEstimator(const Data&, double);
+  void operator()(const Data&, double*, double*, double*, double*);
+
+private:
+  int n;
+  int p;
+  double k0;
+  double beta;
+  LQSEstimator lqs_estimator;
 };
 
 } // namespace bootrlm

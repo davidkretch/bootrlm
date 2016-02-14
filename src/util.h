@@ -24,6 +24,12 @@ private:
   double c;
 };
 
+// sample without replacement
+void sample_noreplace(int*, int, int);
+
+// generate all possible combinations
+void next_set(int*, int, int);
+
 } // namespace util
 
 #endif
