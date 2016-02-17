@@ -20,8 +20,6 @@ public:
   void operator()(const Data&, double*, double*, double*, double*);
 
 private:
-  double lmsadj(double*, int, int, double*);
-  double ltsadj(double*, int, int, double*);
   double chi(double, double);
   int n;
   int p;
@@ -36,6 +34,7 @@ private:
   int sing;
   double pk0;
   double beta;
+  arma::umat indices;
 };
 
 class MMEstimator : public Estimator {

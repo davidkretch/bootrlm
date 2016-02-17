@@ -22,6 +22,23 @@ LQSEstimator::LQSEstimator(const Data& data, double k0, double beta)
   crit = 0;
   sing = 0;
   pk0 = k0;
+
+  indices.set_size(nwhich, ntrials);
+  int which[nwhich];
+  arma::uvec which_vec(nwhich);
+
+  if(!(sample)) {
+    for(int i = 0; i < nwhich; i++) which[i] = i;
+  } else GetRNGstate();
+
+  // get all the subset indices used across all trials
+  for (int trial = 0; trial < ntrials; trial++) {
+    if(!(sample)) {if(trial > 0) util::next_set(which, n, nwhich);}
+    else util::sample_noreplace(which, n, nwhich);
+
+    for (int i = 0; i < nwhich; i++) which_vec[i] = (unsigned int) which[i];
+    indices.col(trial) = which_vec;
+  }
 }
 
 // For lots of subsets of size nwhich, compute the exact fit to those data
@@ -44,34 +61,30 @@ void LQSEstimator::operator()(const Data& data, double* coef_ptr,
   const arma::mat& x = data.x;
 
   double coef[p];
+  arma::vec coef_vec(coef, p, false, true);
   double qraux[p];
   double work[2*p];
   double res[n];
+  arma::vec res_vec(res, n, false, true);
   double yr[nwhich];
   double xr[nwhich * p];
+  arma::vec yr_vec(yr, nwhich, false, true);
+  arma::mat xr_mat(xr, nwhich, p, false, true);
   double bestcoef[p];
   int pivot[p];
-  int which[nwhich];
+  arma::uvec which_vec(nwhich);
   //int bestone[nwhich];
 
   target = (nn - pp)* (beta);
-
-  if(!(sample)) {
-    for(i = 0; i < nnew; i++) which[i] = i;
-  } else GetRNGstate();
 
   for(trial = 0; trial < ntrials; trial++) {
 
     R_CheckUserInterrupt();
 
-    if(!(sample)) {if(trial > 0) util::next_set(which, nn, nnew);}
-    else util::sample_noreplace(which, nn, nnew);
-
-    for(j = 0; j < nnew; j++) {
-      thisp = which[j];
-      yr[j] = y[thisp];
-      for(k = 0; k < pp; k++) xr[j + nnew*k] = x[thisp + nn*k];
-    }
+    // get this trial's subset
+    which_vec = indices.col(trial);
+    yr_vec = y.elem(which_vec);
+    xr_mat = x.rows(which_vec);
 
     /* compute fit, find residuals */
     F77_CALL(dqrdc2)(xr, &nnew, &nnew, &pp, &tol, &rank, qraux, pivot, work);
@@ -81,67 +94,39 @@ void LQSEstimator::operator()(const Data& data, double* coef_ptr,
     F77_CALL(dqrsl)(xr, &nnew, &nnew, &rank, qraux, yr, &dummy, yr, coef,
              &dummy, &dummy, &n100, &info);
 
-    for(i = 0; i < nn; i++) {
-      sum = y[i];
-      for(j = 0; j < rank; j++) sum -= coef[j] * x[i + nn*j];
-      res[i] = sum;
+    res_vec = y - x * coef_vec;
+
+    /* S estimation */
+    if(firsttrial) {
+      for(i = 0; i < nn; i ++) res[i] = fabs(res[i]);
+      rPsort(res, nn, nn/2);
+      old = res[nn/2]/0.6745;	 /* MAD provides the initial scale */
+      firsttrial = 0;
+    } else {
+      /* only find optimal scale if it will be better than
+       existing best solution */
+      sum = 0.0;
+      for(i = 0; i < nn; i ++) sum += chi(res[i], k0 * best);
+      if(sum > target) continue;
+      old = best;
     }
 
-    /* lqs or lts estimation */
-    if(lts < 2) {
-      /* find the constant subtracted from the residuals that minimizes
-       the criterion. As this is a univariate problem, has an exact
-       solution.  */
-      if(adj) {
-        R_rsort(res, nn);
-        if(lts) a = ltsadj(res, nn, qn, &thiscrit);
-        else a = lmsadj(res, nn, qn, &thiscrit);
-      } else {
-        for(i = 0; i < nn; i++) {
-          sum = res[i] - a;
-          res[i] = sum*sum;
-        }
-        rPsort(res, nn, qn-1); /* partial sort */
-        if(!(lts)) thiscrit = res[qn-1];
-        else {
-          sum = 0.0;
-          for(i = 0; i < qn; i++) sum += res[i];
-          thiscrit = sum;
-        }
-      }
-    } else {
-      /* S estimation */
-      if(firsttrial) {
-        for(i = 0; i < nn; i ++) res[i] = fabs(res[i]);
-        rPsort(res, nn, nn/2);
-        old = res[nn/2]/0.6745;	 /* MAD provides the initial scale */
-        firsttrial = 0;
-      } else {
-        /* only find optimal scale if it will be better than
-         existing best solution */
-        sum = 0.0;
-        for(i = 0; i < nn; i ++) sum += chi(res[i], k0 * best);
-        if(sum > target) continue;
-        old = best;
-      } /* now solve for scale S by re-substitution */
-      for(iter = 0; iter < 30; iter++) {
-        /*printf("iter %d, s = %f sum = %f %f\n", iter, old, sum, target);*/
-        sum = 0.0;
-        for(i = 0; i < nn; i ++) sum += chi(res[i], k0 * old);
-        newp = sqrt(sum/target) * old;
-        if(fabs(sum/target - 1.) < 1e-4) break;
-        old = newp;
-      }
-      thiscrit = newp;
+    /* now solve for scale S by re-substitution */
+    for(iter = 0; iter < 30; iter++) {
+      /*printf("iter %d, s = %f sum = %f %f\n", iter, old, sum, target);*/
+      sum = 0.0;
+      for(i = 0; i < nn; i ++) sum += chi(res[i], k0 * old);
+      newp = sqrt(sum/target) * old;
+      if(fabs(sum/target - 1.) < 1e-4) break;
+      old = newp;
     }
+    thiscrit = newp;
 
     /* first trial might be singular, so use fence */
     if(thiscrit < best) {
       sum = 0.0;
       for(i = 0; i < nn; i ++) sum += chi(res[i], k0 * best);
       best = thiscrit;
-      /* printf("trial %d, best = %f sum = %f %f\n", trial, best, sum, target);*/
-      //for(i = 0; i < nnew; i++) bestone[i] = which[i] + 1;
       for(i = 0; i < pp; i++) bestcoef[i] = coef[i];
       bestcoef[0] += a;
     }
@@ -152,74 +137,15 @@ void LQSEstimator::operator()(const Data& data, double* coef_ptr,
   /* lqs_free(); */
 
   // output
-  arma::vec coef_out(coef_ptr, p, false);
-  arma::vec fitted_out(fitted_ptr, n, false);
-  arma::vec resid_out(resid_ptr, n, false);
-  arma::vec scale_out(scale_ptr, 1, false);
+  arma::vec coef_out(coef_ptr, p, false, true);
+  arma::vec fitted_out(fitted_ptr, n, false, true);
+  arma::vec resid_out(resid_ptr, n, false, true);
+  arma::vec scale_out(scale_ptr, 1, false, true);
 
   for (i = 0; i < p; i++) coef_out[i] = bestcoef[i];
   fitted_out = x * coef_out;
   resid_out = y - fitted_out;
   scale_out = crit;
-}
-
-/*
- Adjust the constant for an LMS fit. This is the midpoint of the
- qn contiguous observations of shortest length.
- */
-// copied from MASS/src/lqs.c
-// Copyright (C) 1998-2007	B. D. Ripley
-// Copyright (C) 1999       R Development Core Team
-double LQSEstimator::lmsadj(double *x, int n, int qn, double *ssbest)
-{
-  int i, k = qn - 1;
-  double len, best, adj;
-
-  best = x[k] - x[0];
-  adj = 0.5*(x[k] + x[0]);
-  for(i = 1; i < n-k; i++){
-    len = x[i+k] - x[i];
-    if(len < best) {
-      best = len;
-      adj = 0.5*(x[i+k] + x[i]);
-    }
-  }
-  *ssbest = 0.25*best*best;
-  return(adj);
-}
-
-/*
- Adjust the constant for an LTS fit. This is the mean of the
- qn contiguous observations of smallest variance.
- */
-// copied from MASS/src/lqs.c
-// Copyright (C) 1998-2007	B. D. Ripley
-// Copyright (C) 1999       R Development Core Team
-double LQSEstimator::ltsadj(double *x, int n, int qn, double *ssbest)
-{
-  int i, k = qn - 1;
-  double ss, best, m1, m2, adj;
-
-  /*printf("qn = %d\n", qn);*/
-  m1 = m2 = 0.0;
-  for(i=0; i < qn; i++) {
-    m1 += x[i];
-    m2 += x[i]*x[i];
-  }
-  adj = m1/qn;
-  best = m2 - m1*m1/qn;
-
-  for(i = 1; i < n-k; i++){
-    m1 += x[i+k] - x[i-1];
-    m2 += x[i+k]*x[i+k] - x[i-1]*x[i-1];
-    ss = m2 - m1*m1/qn;
-    if(ss < best) {
-      best = ss;
-      adj = m1/qn;
-    }
-  }
-  *ssbest = best;
-  return(adj);
 }
 
 /* the chi function for the S estimator: the integral of biweight */
@@ -320,10 +246,10 @@ void MMEstimator::operator()(const Data& data, double* coef_ptr,
   }
 
   // output
-  arma::vec coef_out(coef_ptr, p, false);
-  arma::vec fitted_out(fitted_ptr, n, false);
-  arma::vec resid_out(resid_ptr, n, false);
-  arma::vec scale_out(scale_ptr, 1, false);
+  arma::vec coef_out(coef_ptr, p, false, true);
+  arma::vec fitted_out(fitted_ptr, n, false, true);
+  arma::vec resid_out(resid_ptr, n, false, true);
+  arma::vec scale_out(scale_ptr, 1, false, true);
 
   coef_out = coef;
   fitted_out = x * coef;
