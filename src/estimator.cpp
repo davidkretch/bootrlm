@@ -51,7 +51,7 @@ void LQSEstimator::operator()(const Data& data, double* coef_ptr,
                             double* fitted_ptr, double* resid_ptr,
                             double* scale_ptr) {
   int nnew = nwhich, pp = p;
-  int i, iter, j, k,  nn = n, thisp, trial;
+  int i, iter, nn = n, trial;
   int rank, info, n100 = 100;
   int firsttrial = 1;
   double a = 0.0, tol = 1.0e-7, sum, thiscrit, best = DBL_MAX, target, old,

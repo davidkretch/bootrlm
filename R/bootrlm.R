@@ -78,3 +78,7 @@ summary.bootrlm <- function(object, probs = c(0.025, 0.25, 0.5, 0.75, 0.975), ..
         sd = sds,
         quantiles)
 }
+
+.onUnload <- function(libpath) {
+  library.dynam.unload("bootrlm", libpath)
+}
