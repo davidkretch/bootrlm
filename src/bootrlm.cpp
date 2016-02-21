@@ -1,5 +1,6 @@
 //' @useDynLib bootrlm
 //' @importFrom Rcpp sourceCpp
+//' @importFrom RcppParallel RcppParallelLibs
 #include "boot.h"
 #include "data.h"
 #include "estimator.h"

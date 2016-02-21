@@ -9,11 +9,14 @@ Description: Fast bootstrapped robust linear model estimation in C++.
 License: GPL-2
 LazyData: TRUE
 Imports:
-    Rcpp (>= 0.12.2)
+    Rcpp (>= 0.12.2),
+    RcppParallel
 LinkingTo:
     Rcpp,
     RcppArmadillo,
     RcppParallel
+SystemRequirements:
+    GNU make
 Suggests:
     MASS,
     testthat

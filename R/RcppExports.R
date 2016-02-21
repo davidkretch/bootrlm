@@ -3,6 +3,7 @@
 
 #' @useDynLib bootrlm
 #' @importFrom Rcpp sourceCpp
+#' @importFrom RcppParallel RcppParallelLibs
 NULL
 
 bootrlm_cpp <- function(y, x, rep, method, options) {
