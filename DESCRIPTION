@@ -10,9 +10,10 @@ License: GPL-2
 LazyData: TRUE
 Imports:
     Rcpp (>= 0.12.2)
-LinkingTo: 
-    Rcpp, 
-    RcppArmadillo
+LinkingTo:
+    Rcpp,
+    RcppArmadillo,
+    RcppParallel
 Suggests:
     MASS,
     testthat
