@@ -6,6 +6,8 @@ namespace bootrlm {
 // statistical estimator superclass
 Estimator::Estimator(std::string type) : type(type) {};
 
+Estimator::~Estimator() {};
+
 void Estimator::operator()(const Data&, double*, double*, double*, double*) {};
 
 // LQS-estimator class
