@@ -10,6 +10,7 @@ class Estimator {
 public:
   std::string type;
   Estimator(std::string);
+  virtual ~Estimator();
   virtual void operator()(const Data&, double*, double*, double*, double*);
 };
 
