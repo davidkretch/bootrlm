@@ -1,5 +1,7 @@
 # bootrlm
 
+[![Build Status](https://travis-ci.org/davidkretch/bootrlm.svg?branch=master)](https://travis-ci.org/davidkretch/bootrlm)
+
 bootrlm estimates robust linear models via bootstrap in R, implemented in C++ 
 for speed. It currently supports MM-estimation, which is a robust estimation 
 method that provides both high breakdown point and high efficiency. bootrlm 
