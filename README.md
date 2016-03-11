@@ -9,6 +9,9 @@ method that provides both high breakdown point and high efficiency. bootrlm
 is modeled after the rlm function in package MASS, some of whose code has been 
 incorporated.
 
+Note: This is not production-ready software. It is at the moment a test-bed for 
+C++ development.
+
 ## Usage
 
 ```R
