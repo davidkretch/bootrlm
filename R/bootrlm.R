@@ -26,7 +26,8 @@
 #' bootrlm_fit <- bootrlm(stack.loss ~ ., stackloss, r = 1000, method = "MM")
 #' @export
 bootrlm <- function(formula, data, r, method, options) {
-  rng_state <- .Random.seed
+  # todo: fix
+  rng_state <- NULL
 
   # construct data
   y <- model.response(model.frame(formula, data))
